@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
+// TODO: sua anh ben phim thi sua anh ben suat chieu
 namespace MainForm
 {
     public enum MovieStatus
@@ -29,6 +31,8 @@ namespace MainForm
         int currentMovieId = 0;
 
         List<CinemaMovie> cinemaMovies = new List<CinemaMovie>();
+        int currentCinemaMovieId = 0;
+
         int imageIndex = 0;
 
         public Form1()
@@ -40,8 +44,13 @@ namespace MainForm
             cbbMovieStatus.Items.Add(movieStatusString[MovieStatus.CommingSoon]);
             cbbMovieStatus.SelectedIndex = 0;
 
+            cbbMovies.ValueMember = "Key";
+            cbbMovies.DisplayMember = "Value";
+
             pbMovie.Image = imageList.Images[0];
         }
+
+        #region PHIM
 
         private void btnChooseImage_Click(object sender, EventArgs e)
         {
@@ -87,34 +96,111 @@ namespace MainForm
 
         private void btnSuaPhim_Click(object sender, EventArgs e)
         {
-            Movie selectedMovie = movies.Find(x => x.id == lvMovie.SelectedItems[0].Name);
+            if (lvMovie.SelectedItems.Count > 0)
+            {
+                Movie selectedMovie = movies.Find(x => x.id == lvMovie.SelectedItems[0].Name);
 
-            //if (selectedMovie != null)
-            //{
-            // change movie on backend
-            MovieStatus status = movieStatusString.FirstOrDefault(x => x.Value == cbbMovieStatus.Text).Key;
-            selectedMovie.name = txbMovieName.Text;
-            selectedMovie.imageIndex = imageIndex;
-            selectedMovie.movieStatus = status;
+                if (selectedMovie != null)
+                {
+                    // change movie on backend
+                    MovieStatus status = movieStatusString.FirstOrDefault(x => x.Value == cbbMovieStatus.Text).Key;
+                    selectedMovie.name = txbMovieName.Text;
+                    selectedMovie.imageIndex = imageIndex;
+                    selectedMovie.movieStatus = status;
 
-            // change movie on frontend
-            lvMovie.SelectedItems[0].Text = selectedMovie.name;
-            lvMovie.SelectedItems[0].ImageIndex = selectedMovie.imageIndex;
-            //}
+                    // change movie on frontend
+                    lvMovie.SelectedItems[0].Text = selectedMovie.name;
+                    lvMovie.SelectedItems[0].ImageIndex = selectedMovie.imageIndex;
+                }
+            }
         }
 
         private void btnDeleteMovie_Click(object sender, EventArgs e)
         {
-            Movie selectedMovie = movies.Find(x => x.id == lvMovie.SelectedItems[0].Name);
-
-            movies.Remove(selectedMovie); // remove on backend
-            lvMovie.Items.Remove(lvMovie.SelectedItems[0]); // remove on frontend
-                                                            //lvMovie.Refresh();
-
-            if (lvMovie.Items.Count > 0)
+            if (lvMovie.SelectedItems.Count > 0)
             {
-                lvMovie.Items[0].Selected = true;
-                lvMovie.Select();
+                Movie selectedMovie = movies.Find(x => x.id == lvMovie.SelectedItems[0].Name);
+
+                if (selectedMovie != null)
+                {
+                    movies.Remove(selectedMovie); // remove on backend
+                    lvMovie.Items.Remove(lvMovie.SelectedItems[0]); // remove on frontend
+                                                                    //lvMovie.Refresh();
+
+                    if (lvMovie.Items.Count > 0)
+                    {
+                        lvMovie.Items[0].Selected = true;
+                        lvMovie.Select();
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region SUAT CHIEU
+
+        private void tctrMovie_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (tctrMovie.SelectedIndex)
+            {
+                case 1:
+                    cbbMovies.Items.Clear();
+                    for (int i = 0; i < movies.Count; ++i)
+                    {
+                        if (movies[i].movieStatus == MovieStatus.Live)
+                            cbbMovies.Items.Add(new KeyValuePair<string, string>(movies[i].id, movies[i].name));
+                    }
+                    break;
+            }
+
+            if (cbbMovies.Items.Count > 0)
+                cbbMovies.SelectedIndex = 0;
+        }
+
+        private void btnAddCinemaMovie_Click(object sender, EventArgs e)
+        {
+            string movieId = ((KeyValuePair<string, string>)cbbMovies.SelectedItem).Key;
+            Movie movie = movies.Find(x => x.id == movieId);
+            CinemaMovie newCinemaMovie = new CinemaMovie((currentCinemaMovieId++).ToString(), movie, dtpCinemaDate.Value, dtpCinemaTime.Value);
+
+            // add backend
+            cinemaMovies.Add(newCinemaMovie);
+
+            // add frontend
+            lvCinemaMovie.Items.Add(newCinemaMovie.id, newCinemaMovie.movie.name, newCinemaMovie.movie.imageIndex);
+            lvCinemaMovie.Refresh();
+            lvCinemaMovie.Invalidate();
+        }
+
+        #endregion
+
+        private void btnEditCinemaMovie_Click(object sender, EventArgs e)
+        {
+            CinemaMovie selected = cinemaMovies.Find(x => x.id == lvCinemaMovie.SelectedItems[0].Name);
+
+            if (selected != null)
+            {
+                // change cinema movie on backend
+                DateTime date = dtpCinemaDate.Value;
+                DateTime time = dtpCinemaTime.Value;
+                selected.date = date;
+                selected.time = time;
+
+                // change movie on frontend
+                // chua co
+            }
+        }
+
+        private void lvCinemaMovie_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (lvCinemaMovie.SelectedItems.Count > 0)
+            {
+                CinemaMovie selected = cinemaMovies.Find(x => x.id == lvCinemaMovie.SelectedItems[0].Name);
+
+                dtpCinemaDate.Value = selected.date;
+                dtpCinemaTime.Value = selected.time;
+                cbbMovies.Text = selected.movie.name;
             }
         }
     }
@@ -144,8 +230,17 @@ namespace MainForm
     /// </summary>
     public class CinemaMovie
     {
+        public string id;
+        public Movie movie;
+        public DateTime date;
+        public DateTime time;
 
-
-
+        public CinemaMovie(string id, Movie movie, DateTime date, DateTime time)
+        {
+            this.id = id;
+            this.movie = movie;
+            this.date = date;
+            this.time = time;
+        }
     }
 }
