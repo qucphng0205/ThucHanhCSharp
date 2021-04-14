@@ -21,6 +21,9 @@ namespace MainForm
 
     public partial class Form1 : Form
     {
+        public static int row = 3;
+        public static int column = 6;
+
         public static Dictionary<MovieStatus, string> movieStatusString = new Dictionary<MovieStatus, string> {
             { MovieStatus.Off, "Ngừng chiếu" },
             { MovieStatus.Live, "Đang chiếu" },
@@ -48,6 +51,38 @@ namespace MainForm
             cbbMovies.DisplayMember = "Value";
 
             pbMovie.Image = imageList.Images[0];
+        }
+
+
+        private void tctrMovie_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (tctrMovie.SelectedIndex)
+            {
+                case 1:
+                    cbbMovies.Items.Clear();
+                    for (int i = 0; i < movies.Count; ++i)
+                    {
+                        if (movies[i].movieStatus == MovieStatus.Live)
+                            cbbMovies.Items.Add(new KeyValuePair<string, string>(movies[i].id, movies[i].name));
+                    }
+                    break;
+                case 2:
+                    cbbTicketCinemaMovie.Items.Clear();
+                    for (int i = 0; i < cinemaMovies.Count; ++i)
+                    {
+                        //TODO: chỉ add các movie chưa chiếu/ dang chieu
+                        cbbTicketCinemaMovie.Items.Add(new KeyValuePair<string, string>(
+                                cinemaMovies[i].id,
+                                cinemaMovies[i].id + " - " + cinemaMovies[i].movie.name
+                        ));
+                    }
+                    break;
+            }
+
+            if (cbbMovies.Items.Count > 0)
+                cbbMovies.SelectedIndex = 0;
+            if (cbbTicketCinemaMovie.Items.Count > 0)
+                cbbTicketCinemaMovie.SelectedIndex = 0;
         }
 
         #region PHIM
@@ -140,24 +175,6 @@ namespace MainForm
 
         #region SUAT CHIEU
 
-        private void tctrMovie_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            switch (tctrMovie.SelectedIndex)
-            {
-                case 1:
-                    cbbMovies.Items.Clear();
-                    for (int i = 0; i < movies.Count; ++i)
-                    {
-                        if (movies[i].movieStatus == MovieStatus.Live)
-                            cbbMovies.Items.Add(new KeyValuePair<string, string>(movies[i].id, movies[i].name));
-                    }
-                    break;
-            }
-
-            if (cbbMovies.Items.Count > 0)
-                cbbMovies.SelectedIndex = 0;
-        }
-
         private void btnAddCinemaMovie_Click(object sender, EventArgs e)
         {
             string movieId = ((KeyValuePair<string, string>)cbbMovies.SelectedItem).Key;
@@ -173,25 +190,6 @@ namespace MainForm
             lvCinemaMovie.Invalidate();
         }
 
-        #endregion
-
-        private void btnEditCinemaMovie_Click(object sender, EventArgs e)
-        {
-            CinemaMovie selected = cinemaMovies.Find(x => x.id == lvCinemaMovie.SelectedItems[0].Name);
-
-            if (selected != null)
-            {
-                // change cinema movie on backend
-                DateTime date = dtpCinemaDate.Value;
-                DateTime time = dtpCinemaTime.Value;
-                selected.date = date;
-                selected.time = time;
-
-                // change movie on frontend
-                // chua co
-            }
-        }
-
         private void lvCinemaMovie_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (lvCinemaMovie.SelectedItems.Count > 0)
@@ -203,6 +201,68 @@ namespace MainForm
                 cbbMovies.Text = selected.movie.name;
             }
         }
+
+        private void btnEditCinemaMovie_Click(object sender, EventArgs e)
+        {
+            if (lvCinemaMovie.SelectedItems.Count > 0)
+            {
+                CinemaMovie selected = cinemaMovies.Find(x => x.id == lvCinemaMovie.SelectedItems[0].Name);
+
+                if (selected != null)
+                {
+                    // change cinema movie on backend
+                    DateTime date = dtpCinemaDate.Value;
+                    DateTime time = dtpCinemaTime.Value;
+                    selected.date = date;
+                    selected.time = time;
+
+                    // change movie on frontend
+                    // chua co
+                }
+            }
+        }
+
+        private void btnDeleteCinemaMovie_Click(object sender, EventArgs e)
+        {
+            if (lvCinemaMovie.SelectedItems.Count > 0)
+            {
+                CinemaMovie selected = cinemaMovies.Find(x => x.id == lvCinemaMovie.SelectedItems[0].Name);
+
+                if (selected != null)
+                {
+                    // change cinema movie on backend
+                    cinemaMovies.Remove(selected);
+
+                    // change movie on frontend
+                    lvCinemaMovie.Items.Remove(lvCinemaMovie.SelectedItems[0]);
+                }
+            }
+        }
+
+        #endregion
+
+        #region VE
+
+        private void cbbTicketCinemaMovie_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            lvSeats.Items.Clear();
+            string cinemaMovieIndex = ((KeyValuePair<string, string>)cbbTicketCinemaMovie.SelectedItem).Key;
+            CinemaMovie cinemaMovie = cinemaMovies.Find(x => x.id == cinemaMovieIndex);
+
+            if (cinemaMovie != null)
+            {
+                int row = cinemaMovie.room.row;
+                int column = cinemaMovie.room.column;
+                for (int i = 0; i < row; ++i)
+                    for (int j = 0; j < column; ++j)
+                    {
+                        int index = i * column + j;
+                        lvSeats.Items.Add(cinemaMovie.room.seats[index].id, cinemaMovie.room.seats[index].id, 0);
+                    }
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -234,13 +294,58 @@ namespace MainForm
         public Movie movie;
         public DateTime date;
         public DateTime time;
+        public int price;
+        public CinemaRoom room;
 
-        public CinemaMovie(string id, Movie movie, DateTime date, DateTime time)
+        public CinemaMovie(string id, Movie movie, DateTime date, DateTime time, int price = 100000)
         {
             this.id = id;
             this.movie = movie;
             this.date = date;
             this.time = time;
+            this.price = price;
+            room = new CinemaRoom(Form1.row, Form1.column);
         }
     }
+
+
+    public enum SeatStatus
+    {
+        Available,
+        Unavailable,
+    }
+    public class Seat
+    {
+        public SeatStatus status;
+        public string id;
+        public Seat(string id, SeatStatus status = SeatStatus.Available)
+        {
+            this.id = id;
+            this.status = status;
+        }
+    }
+
+    public class CinemaRoom
+    {
+        //public CinemaMovie movie;
+        public List<Seat> seats;
+        public int row;
+        public int column;
+        public CinemaRoom(int row, int column)
+        {
+            this.row = row;
+            this.column = column;
+            int startPos = 65;
+            seats = new List<Seat>();
+            for (int i = 0; i < row; ++i)
+            {
+                for (int j = 0; j < column; ++j)
+                {
+                    seats.Add(new Seat((char)startPos + " " + (j + 1)));
+                }
+                startPos++;
+            }
+        }
+    }
+
 }
