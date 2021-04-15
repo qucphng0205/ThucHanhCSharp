@@ -651,8 +651,8 @@
             // 
             this.iconImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("iconImageList.ImageStream")));
             this.iconImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.iconImageList.Images.SetKeyName(0, "emptySeat.png");
-            this.iconImageList.Images.SetKeyName(1, "busySeat.png");
+            this.iconImageList.Images.SetKeyName(0, "emptySeat2.png");
+            this.iconImageList.Images.SetKeyName(1, "busySeat2.png");
             this.iconImageList.Images.SetKeyName(2, "selectSeat.png");
             // 
             // panel3
@@ -713,6 +713,7 @@
             this.btnSavePrice.BackColor = System.Drawing.Color.RoyalBlue;
             this.btnSavePrice.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSavePrice.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.btnSavePrice.Image = ((System.Drawing.Image)(resources.GetObject("btnSavePrice.Image")));
             this.btnSavePrice.Location = new System.Drawing.Point(193, 247);
             this.btnSavePrice.Name = "btnSavePrice";
             this.btnSavePrice.Size = new System.Drawing.Size(77, 35);
@@ -861,9 +862,10 @@
             this.ClientSize = new System.Drawing.Size(1711, 863);
             this.Controls.Add(this.tctrMovie);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Cinema Management";
             this.tctrMovie.ResumeLayout(false);
             this.tabMovie.ResumeLayout(false);
             this.tabMovie.PerformLayout();
